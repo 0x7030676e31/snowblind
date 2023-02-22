@@ -16,6 +16,15 @@ Snowblind is a simple tool for trying to guess future discord ids. The main purp
 $ npm start
 ```
 
+### Dotenv
+
+Some environment variables are required to run the bot. You can set them in a `.env` file in the root directory of the project. The following variables are required:
+```ini
+TOKEN=your_token
+GUILD=your_guild_id
+CHANNEL=your_channel_id
+```
+
 # How it works
 Before we get into the details, here is a nice graphic made by discord:
 &nbsp;

@@ -67,7 +67,7 @@ export default {
     // Predict process
     let process: bigint;
     if (lastIncrement <= 30n) process = BigInt(lastProcess);
-    else process = BigInt(Math.floor(Math.random() * 10 % 6));
+    else process = BigInt(Math.floor(Math.random() * 6));
 
     // Predict increment
     const tens = Math.floor(avg(avgIncrement) / 10) * 10 + ((Math.floor(Math.random() * 10 % 6) + 1) * 10 - 30)
@@ -94,6 +94,7 @@ function getIncrDigit(): number {
     if (rand < cumulative) return Number(entries[+i][0]);
   }
 
+  // Something went wrong
   console.log(cumulative, ratios, rand, incrData);
   return 0;
 }
