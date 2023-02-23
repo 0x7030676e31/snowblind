@@ -8,15 +8,13 @@ import id from "./id.js";
   console.log("Snowblind started!");
 
   // Send initial message
-  const date = Date.now();
-  const snowflake = await send();
+  const [ snowflake, date ] = await send();
   id.register(snowflake, date);
 
   while (true) {
     await sleep(1500);
 
-    const date = Date.now();
-    const snowflake = await send(id.predict());
+    const [ snowflake, date ] = await send(id.predict());
     id.register(snowflake, date);
   }
 })();

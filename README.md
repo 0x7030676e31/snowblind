@@ -35,6 +35,8 @@ As we can see, snowflake contains 4 different parts:
 **Process ID** - The ID of the process that processed the message.
 **Increment** - The ID of the message in the process. 
 
+# Section to update
+
 ## Timestamp
 Technique used to guess the timestamp is pretty simple. It's just average of diffrence in timestamp between guessed and actual id.
 Formula used for guessing timestamp is actually `Date.now() - epoch - averageDifference`.

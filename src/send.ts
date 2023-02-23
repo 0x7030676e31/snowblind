@@ -19,7 +19,7 @@ const superProp = {
   "design_id": 0
 }
 
-export default async function send(snowflake?: bigint): Promise<bigint> {
+export default async function send(snowflake?: bigint): Promise<[bigint, number]> {
   const channel = process.env.CHANNEL!;
   const guild = process.env.GUILD!;
 
@@ -32,6 +32,7 @@ export default async function send(snowflake?: bigint): Promise<bigint> {
   });
 
   // Send the message
+  const date = Date.now();
   const url = `https://discord.com/api/v9/channels/${channel}/messages`;
   const request = await fetch(url, {
     method: "POST",
@@ -61,12 +62,12 @@ export default async function send(snowflake?: bigint): Promise<bigint> {
   // Discord doesn't like us
   if (!request.ok) {
     console.log(`Error: ${request.status} ${request.statusText}`);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, request.status === 429 ? 5000 : 1500));
     return await send(snowflake);
   }
   
   const response = await request.json() as any;
-  return BigInt(response.id);
+  return [BigInt(response.id), date];
 }
 
 // Get a random nonce (snowflake only with timestamp)

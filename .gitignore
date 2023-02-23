@@ -3,6 +3,5 @@ build/
 node_modules/
 
 .env
-data.txt
-incr.json
+*.txt
 package-lock.json

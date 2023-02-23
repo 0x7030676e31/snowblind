@@ -1,14 +1,13 @@
 import fs from "fs";
 
 let lastWorker: bigint = 0n;
-let lastProcess: number = 0;
-let lastIncrement: number = 0;
 
 const avgTimestamp: number[] = [];
 const avgIncrement: number[] = [];
 
-if (!fs.existsSync("incr.json")) fs.writeFileSync("incr.json", "{}");
-const incrData: { [key: string]: number } = JSON.parse(fs.readFileSync("incr.json", "utf8"));
+if (!fs.existsSync("incr.txt")) fs.writeFileSync("incr.txt", "");
+const incrOnces: number[] = fs.readFileSync("incr.txt", "utf8").split("").map(Number);
+const incrTens: number[] = [];
 
 let predictedSnowflake: bigint = 0n;
 const epoch = 1420070400000n;
@@ -22,7 +21,7 @@ export default {
       console.log(`${url}\nSnowflake is the same as the last one, exiting...`);
       process.exit(0);
     }
-    
+
     const a1 = Number(snowflake >> 22n);
     const a3 = Number(snowflake & 0x1F000n) >> 12;
     const a4 = Number(snowflake & 0xFFFn);
@@ -37,8 +36,6 @@ export default {
     
     // Save the last snowflake
     lastWorker = (snowflake & 0x3E0000n) >> 17n;
-    lastProcess = a3;
-    lastIncrement = a4;
 
     // Save the diff in timestamp
     const delatT = date - (a1 + Number(epoch));
@@ -46,16 +43,21 @@ export default {
     if (avgTimestamp.length > 10) avgTimestamp.shift();
     
     // Save the diff in incremental value
-    avgIncrement.push(Number(lastIncrement));
+    avgIncrement.push(a4);
     if (avgIncrement.length > 10) avgIncrement.shift();
     
-    // Register the last digit of the incremental value
-    const incrLast = lastIncrement.toString().at(-1)!;
-    if (!incrData[incrLast]) incrData[incrLast] = 0;
-    incrData[incrLast]++;
+    // Register the last incremental value
+    const ones = +a4.toString().at(-1)!;
+    const tens = Math.floor(a4 / 10) * 10;
+
+    incrOnces.push(ones);
+    incrTens.push(tens);
+
+    if (incrOnces.length > 100) incrOnces.shift();
+    if (incrTens.length > 20) incrTens.shift();
     
     // Save the data
-    fs.writeFileSync("incr.json", JSON.stringify(incrData, null, 2));
+    fs.writeFileSync("incr.txt", incrOnces.join(""));
     if (predictedSnowflake) fs.appendFileSync("data.txt", `${fmt1} ${fmt3} ${fmt4}\n`);
   },
   
@@ -65,13 +67,10 @@ export default {
     const timestamp = BigInt(Date.now()) - epoch - BigInt(Math.floor(avg(avgTimestamp)));
 
     // Predict process
-    let process: bigint;
-    if (lastIncrement <= 30n) process = BigInt(lastProcess);
-    else process = BigInt(Math.floor(Math.random() * 6));
+    const process = BigInt(Math.floor(Math.random() * 6));
 
     // Predict increment
-    const tens = Math.floor(avg(avgIncrement) / 10) * 10 + ((Math.floor(Math.random() * 10 % 6) + 1) * 10 - 30)
-    const increment = BigInt(Math.abs(tens) + getIncrDigit()); 
+    const increment = BigInt(getIncrTens() + getIncrAvg()); 
 
     // Generate snowflake
     const snowflake = (timestamp << 22n) | (lastWorker << 17n) | (process << 12n) | increment;
@@ -81,8 +80,14 @@ export default {
 }
 
 // Get a random digit based on the frequency of the last digit of the incremental value
-function getIncrDigit(): number {
-  const entries = Object.entries(incrData);
+function getIncrAvg(): number {
+  const obj: { [key: string]: number } = {};
+  for (const i of incrOnces) {
+    if (obj[i] !== undefined) obj[i]++;
+    else obj[i] = 1;
+  }
+
+  const entries = Object.entries(obj);
   const max = entries.reduce((a, b) => a + b[1], 0);
   const ratios = entries.map((e) => e[1] / max);
 
@@ -95,8 +100,29 @@ function getIncrDigit(): number {
   }
 
   // Something went wrong
-  console.log(cumulative, ratios, rand, incrData);
+  console.log(cumulative, ratios, rand, incrOnces);
   return 0;
+}
+
+// Get the most common tens digit of the incremental value
+function getIncrTens(): number {
+  // ==============
+  // Still experimenting with this one. So far it's not very accurate.
+  // Probably I will do some tests with the data I have and see what works best.
+  // ==============
+
+
+  // const obj = incrTens.reduce((a, b) => {
+  //   if (a[b] !== undefined) a[b]++;
+  //   else a[b] = 1;
+  //   return a;
+  // }, {} as { [key: number]: number });
+
+  // const max = Math.max(...Object.values(obj));
+  // const arr = Object.entries(obj).filter((e) => e[1] === max).map((e) => Number(e[0]));
+
+  // return arr[Math.floor(Math.random() * arr.length)];
+  return Math.floor(incrTens.reduce((a, b) => a + b, 0) / incrTens.length / 10) * 10 || 0;
 }
 
 // Get the average of an array

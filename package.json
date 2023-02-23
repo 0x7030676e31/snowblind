@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "rm -fr build && tsc && clear && node .",
-    "new": "rm data.txt incr.json || true && npm start"
+    "new": "rm data.txt incr.txt || true && npm start"
   },
   "author": "0x7030676e31",
   "license": "ISC",
